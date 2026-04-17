@@ -14,6 +14,22 @@ A simple TCP port scanner written in Go.
 
 ## Run
 
+### Install
+
+```bash
+go install github.com/Ad1th/KnockKnockGo@latest
+mv "$(go env GOPATH)/bin/KnockKnockGo" "$(go env GOPATH)/bin/knock"
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+After that, you can run:
+
+```bash
+knock
+```
+
+### Run from source
+
 ```bash
 go run main.go
 ```
