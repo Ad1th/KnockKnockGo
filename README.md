@@ -4,7 +4,8 @@ A simple TCP port scanner written in Go.
 
 ## What It Does
 
-- Scans TCP ports 1-10000
+- Scans TCP ports 1-30000 by default
+- Supports full scan (1-65535) with `-full`
 - Uses `localhost` by default
 - Accepts a custom host with `-server`
 - Shows response time for each open port
@@ -17,10 +18,22 @@ A simple TCP port scanner written in Go.
 go run main.go
 ```
 
+Full scan:
+
+```bash
+go run main.go -full
+```
+
 Use a custom host:
 
 ```bash
 go run main.go -server scanme.nmap.org
+```
+
+Full scan for a custom host:
+
+```bash
+go run main.go -server scanme.nmap.org -full
 ```
 
 Scan a custom range with a worker pool:
@@ -33,7 +46,8 @@ Flags:
 
 - `-server`: target host (default `localhost`)
 - `-start`: start port (default `1`)
-- `-end`: end port (default `10000`)
+- `-end`: end port (default `30000`)
+- `-full`: scan all ports (`1-65535`)
 - `-workers`: number of concurrent workers (default `runtime.NumCPU()*8`)
 - `-timeout-ms`: TCP dial timeout per port in milliseconds (default `500`)
 

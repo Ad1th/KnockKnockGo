@@ -137,10 +137,16 @@ func printOpenResult(result scanResult) {
 func main() {
 	server := flag.String("server", "localhost", "target host to scan")
 	startPort := flag.Int("start", 1, "start port")
-	endPort := flag.Int("end", 65535, "end port")
+	endPort := flag.Int("end", 30000, "end port")
+	fullScan := flag.Bool("full", false, "scan all ports (1-65535)")
 	workers := flag.Int("workers", runtime.NumCPU()*8, "number of concurrent workers")
 	timeoutMS := flag.Int("timeout-ms", 500, "dial timeout in milliseconds")
 	flag.Parse()
+
+	if *fullScan {
+		*startPort = 1
+		*endPort = 65535
+	}
 
 	if *startPort < 1 || *startPort > 65535 {
 		fmt.Println("Invalid -start value: must be between 1 and 65535")
