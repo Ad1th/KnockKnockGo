@@ -7,6 +7,8 @@ A simple TCP port scanner written in Go.
 - Scans TCP ports 1-10000
 - Uses `localhost` by default
 - Accepts a custom host with `-server`
+- Shows response time for each open port
+- Detects many common services by port
 - Prints open ports and a final open-port count
 
 ## Run
