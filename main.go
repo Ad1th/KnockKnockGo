@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -25,19 +25,13 @@ func scanPort(host string, port int, openCount *int32, wg *sync.WaitGroup) {
 }
 
 func main() {
+	server := flag.String("server", "localhost", "target host to scan")
+	flag.Parse()
+
 	fmt.Println("🔍 KnockKnockGo scanning...\n")
 
-	host := "localhost"
-	fmt.Print("Enter host (default localhost): ")
-	if _, err := fmt.Scanln(&host); err != nil {
-		host = "localhost"
-	}
-	host = strings.TrimSpace(host)
-	if host == "" {
-		host = "localhost"
-	}
-
-	fmt.Printf("\nTarget host: %s\n\n", host)
+	host := *server
+	fmt.Printf("Target host: %s\n\n", host)
 
 	var wg sync.WaitGroup
 	var openCount int32

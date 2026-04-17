@@ -5,7 +5,8 @@ A simple TCP port scanner written in Go.
 ## What It Does
 
 - Scans TCP ports 1-10000
-- Prompts you for a target host
+- Uses `localhost` by default
+- Accepts a custom host with `-server`
 - Prints open ports and a final open-port count
 
 ## Run
@@ -14,13 +15,11 @@ A simple TCP port scanner written in Go.
 go run main.go
 ```
 
-Example input:
+Use a custom host:
 
-```text
-Enter host (default localhost): scanme.nmap.org
+```bash
+go run main.go -server scanme.nmap.org
 ```
-
-If you just press Enter, it scans `localhost`.
 
 ## Notes
 
