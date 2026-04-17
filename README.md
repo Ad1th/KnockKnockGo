@@ -23,6 +23,20 @@ Use a custom host:
 go run main.go -server scanme.nmap.org
 ```
 
+Scan a custom range with a worker pool:
+
+```bash
+go run main.go -server scanme.nmap.org -start 1 -end 2000 -workers 200 -timeout-ms 400
+```
+
+Flags:
+
+- `-server`: target host (default `localhost`)
+- `-start`: start port (default `1`)
+- `-end`: end port (default `10000`)
+- `-workers`: number of concurrent workers (default `runtime.NumCPU()*8`)
+- `-timeout-ms`: TCP dial timeout per port in milliseconds (default `500`)
+
 ## Notes
 
 - This is for learning and authorized testing only.

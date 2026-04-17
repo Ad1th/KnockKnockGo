@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"runtime"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -86,49 +86,126 @@ var commonServices = map[int]string{
 	50000: "DB2",
 }
 
-func scanPort(host string, port int, openCount *int32, wg *sync.WaitGroup) {
-	defer wg.Done()
+type scanResult struct {
+	port     int
+	duration time.Duration
+	service  string
+}
+
+func scanPort(host string, port int, timeout time.Duration) (scanResult, bool) {
+	result := scanResult{port: port}
 
 	address := fmt.Sprintf("%s:%d", host, port)
 	start := time.Now()
 
-	conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond)
-	duration := time.Since(start)
+	conn, err := net.DialTimeout("tcp", address, timeout)
+	result.duration = time.Since(start)
 	if err != nil {
-		return // skip closed ports (clean output)
+		return result, false
 	}
 	conn.Close()
 
 	if service, ok := commonServices[port]; ok {
-		fmt.Printf("🚪 Knock... Port %d is OPEN in %s (%s)\n", port, duration, service)
-		if port == 80 {
-			fmt.Println("HTTP server detected")
-		}
-	} else {
-		fmt.Printf("🚪 Knock... Port %d is OPEN in %s\n", port, duration)
+		result.service = service
 	}
 
-	atomic.AddInt32(openCount, 1)
+	return result, true
+}
+
+func worker(host string, timeout time.Duration, jobs <-chan int, results chan<- scanResult, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for port := range jobs {
+		if result, ok := scanPort(host, port, timeout); ok {
+			results <- result
+		}
+	}
+}
+
+func printOpenResult(result scanResult) {
+	if result.service != "" {
+		fmt.Printf("🚪 Knock... Port %d is OPEN in %s (%s)\n", result.port, result.duration, result.service)
+		if result.port == 80 {
+			fmt.Println("HTTP server detected")
+		}
+		return
+	}
+
+	fmt.Printf("🚪 Knock... Port %d is OPEN in %s\n", result.port, result.duration)
 }
 
 func main() {
 	server := flag.String("server", "localhost", "target host to scan")
+	startPort := flag.Int("start", 1, "start port")
+	endPort := flag.Int("end", 10000, "end port")
+	workers := flag.Int("workers", runtime.NumCPU()*8, "number of concurrent workers")
+	timeoutMS := flag.Int("timeout-ms", 500, "dial timeout in milliseconds")
 	flag.Parse()
+
+	if *startPort < 1 || *startPort > 65535 {
+		fmt.Println("Invalid -start value: must be between 1 and 65535")
+		return
+	}
+
+	if *endPort < 1 || *endPort > 65535 {
+		fmt.Println("Invalid -end value: must be between 1 and 65535")
+		return
+	}
+
+	if *startPort > *endPort {
+		fmt.Println("Invalid range: -start cannot be greater than -end")
+		return
+	}
+
+	if *workers < 1 {
+		fmt.Println("Invalid -workers value: must be at least 1")
+		return
+	}
+
+	if *timeoutMS < 1 {
+		fmt.Println("Invalid -timeout-ms value: must be at least 1")
+		return
+	}
 
 	fmt.Println("🔍 KnockKnockGo scanning...\n")
 
 	host := *server
-	fmt.Printf("Target host: %s\n\n", host)
-
-	var wg sync.WaitGroup
-	var openCount int32
-
-	for port := 1; port <= 10000; port++ {
-		wg.Add(1)
-		go scanPort(host, port, &openCount, &wg)
+	portCount := *endPort - *startPort + 1
+	if *workers > portCount {
+		*workers = portCount
 	}
 
-	wg.Wait()
+	fmt.Printf("Target host: %s\n", host)
+	fmt.Printf("Port range: %d-%d\n", *startPort, *endPort)
+	fmt.Printf("Workers: %d\n", *workers)
+	fmt.Printf("Timeout: %dms\n\n", *timeoutMS)
+
+	jobs := make(chan int, *workers*2)
+	results := make(chan scanResult, *workers*2)
+
+	var workerWg sync.WaitGroup
+	for i := 0; i < *workers; i++ {
+		workerWg.Add(1)
+		go worker(host, time.Duration(*timeoutMS)*time.Millisecond, jobs, results, &workerWg)
+	}
+
+	go func() {
+		for port := *startPort; port <= *endPort; port++ {
+			jobs <- port
+		}
+		close(jobs)
+	}()
+
+	go func() {
+		workerWg.Wait()
+		close(results)
+	}()
+
+	openCount := 0
+	for result := range results {
+		printOpenResult(result)
+		openCount++
+	}
 
 	fmt.Println("Open ports:", openCount)
 	fmt.Println("\n✅ Scan complete")
