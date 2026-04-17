@@ -17,8 +17,7 @@ A simple TCP port scanner written in Go.
 ### Install
 
 ```bash
-go install github.com/Ad1th/KnockKnockGo@latest
-mv "$(go env GOPATH)/bin/KnockKnockGo" "$(go env GOPATH)/bin/knock"
+go install github.com/Ad1th/KnockKnockGo/cmd/knock@latest
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
@@ -31,31 +30,31 @@ knock
 ### Run from source
 
 ```bash
-go run main.go
+go run ./cmd/knock
 ```
 
 Full scan:
 
 ```bash
-go run main.go -full
+go run ./cmd/knock -full
 ```
 
 Use a custom host:
 
 ```bash
-go run main.go -server scanme.nmap.org
+go run ./cmd/knock -server scanme.nmap.org
 ```
 
 Full scan for a custom host:
 
 ```bash
-go run main.go -server scanme.nmap.org -full
+go run ./cmd/knock -server scanme.nmap.org -full
 ```
 
 Scan a custom range with a worker pool:
 
 ```bash
-go run main.go -server scanme.nmap.org -start 1 -end 2000 -workers 200 -timeout-ms 400
+go run ./cmd/knock -server scanme.nmap.org -start 1 -end 2000 -workers 200 -timeout-ms 400
 ```
 
 Flags:
