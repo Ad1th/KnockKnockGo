@@ -137,7 +137,7 @@ func printOpenResult(result scanResult) {
 func main() {
 	server := flag.String("server", "localhost", "target host to scan")
 	startPort := flag.Int("start", 1, "start port")
-	endPort := flag.Int("end", 10000, "end port")
+	endPort := flag.Int("end", 65535, "end port")
 	workers := flag.Int("workers", runtime.NumCPU()*8, "number of concurrent workers")
 	timeoutMS := flag.Int("timeout-ms", 500, "dial timeout in milliseconds")
 	flag.Parse()
